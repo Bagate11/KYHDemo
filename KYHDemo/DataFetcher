@@ -1,0 +1,31 @@
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+namespace KYHDemo
+{
+    internal class DataFetcher
+    {
+        private static readonly HttpClient httpClient = new HttpClient();
+
+      
+        private const string ReadApiKey = "RKL1AWY0DJN35G6H";
+        private const string ChannelId = "3091713";
+
+        
+        public static async Task<string> GetLast100Async()
+        {
+            string url = $"https://api.thingspeak.com/channels/{ChannelId}/feeds.json?api_key={ReadApiKey}&results=100";
+            var response = await httpClient.GetAsync(url);
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadAsStringAsync();
+            }
+            else
+            {
+                Console.WriteLine($"Fel vid hämtning: {response.StatusCode}");
+                return string.Empty;
+            }
+        }
+    }
+}
