@@ -1,0 +1,55 @@
+using System;
+using System.Text.Json;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace KYHDemo
+{
+    internal class AnalysisProgram
+    {
+        public static async Task RunAnalysisAsync()
+        {
+            Console.WriteLine("Hämtar data från ThingSpeak (senaste 100 datapunkter)...\n");
+
+            string jsonData = await DataFetcher.GetLast100Async();
+
+            if (string.IsNullOrEmpty(jsonData))
+            {
+                Console.WriteLine("Ingen data kunde hämtas.");
+                return;
+            }
+
+            var doc = JsonDocument.Parse(jsonData);
+            var feeds = doc.RootElement.GetProperty("feeds").EnumerateArray().ToList();
+
+            if (feeds.Count == 0)
+            {
+                Console.WriteLine("Inga datapunkter hittades.");
+                return;
+            }
+
+            var speeds = feeds.Select(f => double.TryParse(f.GetProperty("field1").GetString(), out double v) ? v : 0).ToList();
+            var rpms = feeds.Select(f => double.TryParse(f.GetProperty("field4").GetString(), out double v) ? v : 0).ToList();
+            var lat = feeds.Last().GetProperty("field6").GetString();
+            var lon = feeds.Last().GetProperty("field7").GetString();
+            var felkoder = feeds.Select(f => f.GetProperty("field5").GetString()).Where(s => !string.IsNullOrEmpty(s)).Distinct();
+
+            Console.WriteLine($"Antal datapunkter: {feeds.Count}");
+            Console.WriteLine($"Medelhastighet: {speeds.Average():F2} km/h");
+            Console.WriteLine($"Medel-RPM: {rpms.Average():F0}");
+            Console.WriteLine($"\nSenaste position: {lat}, {lon}");
+            Console.WriteLine($"Google Maps: https://www.google.com/maps?q={lat},{lon}");
+
+            if (felkoder.Any())
+            {
+                Console.WriteLine("\nUpptäckta felkoder:");
+                foreach (var code in felkoder)
+                    Console.WriteLine($"- {code}");
+            }
+            else
+            {
+                Console.WriteLine("\nInga felkoder registrerade.");
+            }
+        }
+    }
+}
