@@ -42,7 +42,7 @@ namespace KYHDemo
             }
         }
 
-        // 🚗 Simulatorn (samma som din tidigare kod)
+        //  Simulatorn (samma som din tidigare kod)
         static async Task StartSimulator()
         {
             Console.WriteLine("\nStartar bilsimulering med GPS och OBD-felkoder...\n");
